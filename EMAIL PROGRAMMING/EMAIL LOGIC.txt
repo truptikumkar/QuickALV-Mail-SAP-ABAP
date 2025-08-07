@@ -1,0 +1,268 @@
+FORM SEND_MAIL.
+  DATA : quan TYPE string ,
+
+        stk TYPE string ,
+        val TYPE string,
+        lt_bin TYPE solix_tab,
+        lt_result TYPE REF TO CL_BCS,
+        lt_user TYPE REF TO CL_SAPUSER_BCS,
+        lt_external_user TYPE REF TO cl_cam_address_bcs,
+        lt_external_user1  TYPE REF TO cl_cam_address_bcs,
+        lv_lines TYPE i,
+         lv_subject TYPE SO_OBJ_DES,
+         lv_text TYPE SOLI_TAB,
+         wa_text TYPE SOLI,
+         lv_doc TYPE REF TO CL_DOCUMENT_BCS,
+         lv_attachment TYPE SO_OBJ_DES,
+         lv_result TYPE boolean.
+
+    CONCATENATE &#39;REQ_NO&#39; &#39;POS_DATE&#39; &#39;POS_TIME&#39; &#39;PLANT&#39; &#39;MATERIAL&#39; &#39;MAT_DES&#39; &#39;
+QUANTITY&#39; &#39;STOCK&#39; &#39;VALUE&#39; &#39;APP_DATE&#39; &#39;APP_TIME&#39; &#39;ISS_DATE&#39; INTO wa_dt-
+data SEPARATED BY &#39;|&#39;.
+    APPEND wa_dt TO it_tb.
+    CLEAR wa_dt.
+LOOP AT fn_table INTO wa_tb.
+  quan = wa_tb-QUANTITY.
+  stk = wa_tb-STOCK.
+  val = wa_tb-VALUE.
+  CONCATENATE wa_tb-REQ_NO wa_tb-POS_DATE wa_tb-POS_TIME wa_tb-PLANT  wa_tb-
+MATERIAL wa_tb-MAT_DES quan stk val wa_tb-APP_DATE wa_tb-APP_TIME wa_tb-
+ISS_DATE INTO wa_dt-data SEPARATED BY &#39;|&#39;.
+    APPEND wa_dt TO it_tb.
+    CLEAR wa_dt.
+  ENDLOOP.
+  CALL FUNCTION &#39;SCMS_TEXT_TO_BINARY&#39;
+    TABLES
+      text_tab              = it_tb
+      binary_tab            = lt_bin
+            .
+  IF sy-subrc &lt;&gt; 0.
+* Implement suitable error handling here
+  ENDIF.
+TRY.
+CALL METHOD cl_bcs=&gt;create_persistent
+  RECEIVING
+    result = lt_result
+    .
+  CATCH cx_send_req_bcs.
+ENDTRY.
+TRY.
+CALL METHOD cl_sapuser_bcs=&gt;create
+
+  EXPORTING
+    i_user = &#39;VEABAP3&#39;
+  receiving
+    result = lt_user
+    .
+  CATCH cx_address_bcs.
+ENDTRY.
+TRY.
+CALL METHOD lt_result-&gt;add_recipient
+  EXPORTING
+    i_recipient  = lt_user
+*    i_express    =
+*    i_copy       =
+*    i_blind_copy =
+*    i_no_forward =
+    .
+  CATCH cx_send_req_bcs.
+ENDTRY.
+TRY.
+CALL METHOD cl_cam_address_bcs=&gt;create_internet_address
+  EXPORTING
+    i_address_string = &#39;zzkdeshpande1@vecv.in&#39;
+*    i_address_name   =
+*    i_incl_sapuser   =
+  receiving
+    result           = lt_external_user
+    .
+  CATCH cx_address_bcs.
+ENDTRY.
+TRY.
+CALL METHOD lt_result-&gt;add_recipient
+  EXPORTING
+    i_recipient  = lt_external_user
+*    i_express    =
+*    i_copy       =
+*    i_blind_copy =
+*    i_no_forward =
+    .
+  CATCH cx_send_req_bcs.
+ENDTRY.
+TRY.
+CALL METHOD cl_cam_address_bcs=&gt;create_internet_address
+  EXPORTING
+    i_address_string = &#39;kunalgirish135@gmail.com&#39;
+*    i_address_name   =
+*    i_incl_sapuser   =
+  receiving
+    result           = lt_external_user1
+    .
+
+  CATCH cx_address_bcs.
+ENDTRY.
+TRY.
+CALL METHOD lt_result-&gt;add_recipient
+  EXPORTING
+    i_recipient  = lt_external_user1
+*    i_express    =
+    i_copy       = &#39;X&#39;
+    i_blind_copy = &#39;X&#39;
+*    i_no_forward =
+    .
+  CATCH cx_send_req_bcs.
+ENDTRY.
+DESCRIBE TABLE fn_table LINES lv_lines.
+DATA ch TYPE string.
+ch = lv_lines.
+CONCATENATE  &#39;NUMBER OF RECORDS&#39; : ch INTO lv_subject.
+wa_text-LINE = &#39;DEAR SIR,&#39;.
+APPEND wa_text TO lv_text.
+CLEAR  wa_text.
+wa_text-LINE = &#39;HERE IS THE REPORT&#39;.
+APPEND wa_text TO lv_text.
+CLEAR  wa_text.
+wa_text-LINE = &#39;THANKS &amp; REGARDS,&#39;.
+APPEND wa_text TO lv_text.
+CLEAR  wa_text.
+wa_text-LINE = &#39;KUNAL DESHPANDE.&#39;.
+APPEND wa_text TO lv_text.
+CLEAR  wa_text.
+TRY.
+CALL METHOD cl_document_bcs=&gt;create_document
+  EXPORTING
+    i_type         = &#39;RAW&#39;
+    i_subject      = lv_subject
+*    i_length       =
+*    i_language     = SPACE
+*    i_importance   =
+*    i_sensitivity  =
+    i_text         = lv_text
+*    i_hex          =
+*    i_header       =
+*    i_sender       =
+*    iv_vsi_profile =
+
+  RECEIVING
+    result         = lv_doc
+    .
+  CATCH cx_document_bcs.
+ENDTRY.
+CONCATENATE &#39;REPORT FOR ISSUED GOODS&#39; &#39;-&#39; INTO lv_attachment.
+TRY.
+CALL METHOD lv_doc-&gt;add_attachment
+  EXPORTING
+    i_attachment_type     = &#39;XLS&#39;
+    i_attachment_subject  = lv_attachment
+*    i_attachment_size     =
+*    i_attachment_language = SPACE
+*    i_att_content_text    =
+    i_att_content_hex     = lt_bin
+*    i_attachment_header   =
+*    iv_vsi_profile        =
+    .
+  CATCH cx_document_bcs.
+ENDTRY.
+TRY.
+CALL METHOD lt_result-&gt;set_document
+  EXPORTING
+    i_document = lv_doc
+    .
+  CATCH cx_send_req_bcs.
+ENDTRY.
+TRY.
+CALL METHOD lt_result-&gt;set_send_immediately
+  EXPORTING
+    i_send_immediately = &#39;X&#39;
+    .
+  CATCH cx_send_req_bcs.
+ENDTRY.
+TRY.
+CALL METHOD lt_result-&gt;send
+*  EXPORTING
+*    i_with_error_screen = SPACE
+  RECEIVING
+    result              =  lv_result
+    .
+  CATCH cx_send_req_bcs.
+ENDTRY.
+IF lv_result IS NOT INITIAL.
+COMMIT WORK.
+ENDIF.
+
+  ENDFORM.
+
+*  *  CALL FUNCTION &#39;SALV_BS_EXPORT&#39;
+*  EXPORTING
+*    t_data    = it_mara
+*    t_fieldcat = lt_fcat
+*    file_type = &#39;XLSX&#39;
+*  IMPORTING
+*    blob      = lt_attachment
+*    blob_size = lv_bin_size.
+*
+**------------------- STEP 4: Prepare Email Content -------------
+*CLEAR ls_doc_data.
+*ls_doc_data-obj_name  = &#39;ZALVREP&#39;.
+*ls_doc_data-obj_descr = &#39;ALV Report from MARA&#39;.
+*
+** Email body text
+*APPEND &#39;Hello,&#39; TO lt_objcont.
+*APPEND &#39;Please find attached the ALV report from MARA table.&#39; TO lt_objcont.
+*APPEND &#39;Regards,&#39; TO lt_objcont.
+*
+** Packing for body text
+*CLEAR ls_packing.
+*ls_packing-transf_bin = &#39; &#39;.
+*ls_packing-head_start = 1.
+*ls_packing-head_num   = 0.
+*ls_packing-body_start = 1.
+*ls_packing-body_num   = lines( lt_objcont ).
+*ls_packing-doc_type   = &#39;RAW&#39;.
+*APPEND ls_packing TO lt_packing.
+*
+** Packing for attachment
+*CLEAR ls_packing.
+*ls_packing-transf_bin = &#39;X&#39;.
+*ls_packing-head_start = 1.
+*ls_packing-head_num   = 0.
+*ls_packing-body_start = 1.
+*ls_packing-body_num   = lines( lt_attachment ).
+*ls_packing-doc_type   = &#39;XLSX&#39;.
+*ls_packing-obj_name   = &#39;ZALVREP&#39;.
+*ls_packing-obj_descr  = &#39;ALV Report.xlsx&#39;.
+*ls_packing-doc_size   = lv_bin_size.
+*APPEND ls_packing TO lt_packing.
+*
+**------------------- STEP 5: Receiver Email -------------------
+*CLEAR ls_receiver.
+*ls_receiver-receiver = &#39;receiver@example.com&#39;. &quot;   CHANGE THIS
+*ls_receiver-rec_type = &#39;U&#39;.
+*APPEND ls_receiver TO lt_receivers.
+*
+**------------------- STEP 6: Send Email -----------------------
+
+*CALL FUNCTION &#39;SO_NEW_DOCUMENT_ATT_SEND_API1&#39;
+*  EXPORTING
+*    document_data              = ls_doc_data
+*    put_in_outbox              = &#39;X&#39;
+*    commit_work                = &#39;X&#39;
+*  IMPORTING
+*    sent_to_all                = lv_sent_to_all
+*  TABLES
+*    packing_list               = lt_packing
+*    object_header              = lt_objhead
+*    contents_bin               = lt_attachment
+*    contents_txt               = lt_objcont
+*    receivers                  = lt_receivers
+*  EXCEPTIONS
+*    too_many_receivers         = 1
+*    document_not_sent          = 2
+*    operation_no_authorization = 4
+*    OTHERS                     = 99.
+*
+*IF sy-subrc = 0.
+*  MESSAGE &#39;Email sent successfully!&#39; TYPE &#39;S&#39;.
+*ELSE.
+*  MESSAGE &#39;Failed to send email.&#39; TYPE &#39;E&#39;.
+*ENDIF.

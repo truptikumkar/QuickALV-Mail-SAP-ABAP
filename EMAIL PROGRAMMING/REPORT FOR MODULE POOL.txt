@@ -1,0 +1,151 @@
+REPORT FOR MP
+*&amp;---------------------------------------------------------------------*
+*&amp; Report ZTESTMP_REPORT
+*&amp;---------------------------------------------------------------------*
+*&amp;
+*&amp;---------------------------------------------------------------------*
+REPORT ZTESTMP_REPORT.
+TYPE-POOLS : slis.
+TABLES: ZTABLE_REQ.
+TYPES : BEGIN OF ly_data ,
+       data(1000) type c,
+      END OF ly_data.
+DATA : it_tb TYPE TABLE OF ly_data ,
+
+      wa_dt TYPE ly_data.
+DATA:  gs_layout   TYPE slis_layout_alv,
+       gt_fieldcat TYPE slis_t_fieldcat_alv,
+       wa_fieldcat TYPE slis_fieldcat_alv,
+       fn_table TYPE TABLE OF ZTABLE_REQ,
+       wa_tb type ZTABLE_REQ .
+SELECT-OPTIONS: sreq_no FOR ZTABLE_REQ-REQ_NO,
+                sp_date FOR ZTABLE_REQ-POS_DATE.
+PARAMETERS SEND_M AS CHECKBOX .
+SELECT * FROM ZTABLE_REQ INTO @wa_tb WHERE FLAG_BIT = &#39;I&#39;
+            AND req_no IN @sreq_no
+             AND pos_date IN @sp_date.
+  APPEND wa_tb TO fn_table .
+ENDSELECT.
+IF SEND_M = &#39;X&#39;.
+  PERFORM SEND_MAIL.
+ENDIF.
+
+START-OF-SELECTION.
+ CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;REQ_NO&#39;.
+    wa_fieldcat-seltext_m = &#39;REQ_NO&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 12.
+    wa_fieldcat-col_pos = 1.
+      wa_fieldcat-just = &#39;c&#39;.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;POS_DATE&#39;.
+    wa_fieldcat-seltext_m = &#39;POS_DATE&#39;.
+    wa_fieldcat-tabname = &#39;ZTABLE_REQ&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 2.
+      wa_fieldcat-just = &#39;c&#39;.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;POS_TIME&#39;.
+    wa_fieldcat-seltext_m = &#39;POS_TIME&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 3.
+      wa_fieldcat-just = &#39;C&#39;.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+
+    wa_fieldcat-fieldname = &#39;PLANT&#39;.
+    wa_fieldcat-seltext_m = &#39;PLANT&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 4.
+      wa_fieldcat-just = &#39;C&#39;.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;MATERIAL&#39;.
+    wa_fieldcat-seltext_m = &#39;MATERIAL&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 40.
+    wa_fieldcat-col_pos = 5.
+      wa_fieldcat-just = &#39;C&#39;.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;MAT_DES&#39;.
+    wa_fieldcat-seltext_m = &#39;MAT_DES&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 40.
+    wa_fieldcat-col_pos = 6.
+      wa_fieldcat-just = &#39;C&#39;.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;QUANTITY&#39;.
+    wa_fieldcat-seltext_m = &#39;QUANTITY&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 30.
+    wa_fieldcat-col_pos = 7.
+      wa_fieldcat-just = &#39;C&#39;.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;STOCK&#39;.
+    wa_fieldcat-seltext_m = &#39;STOCK&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 12.
+    wa_fieldcat-col_pos = 8.
+      wa_fieldcat-just = &#39;C&#39;.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;VALUE&#39;.
+    wa_fieldcat-seltext_m = &#39;VALUE&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 30.
+    wa_fieldcat-col_pos = 9.
+
+      wa_fieldcat-just = &#39;C&#39;.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;APP_DATE&#39;.
+    wa_fieldcat-seltext_m = &#39;APP_DATE&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 30.
+    wa_fieldcat-col_pos = 10.
+      wa_fieldcat-just = &#39;C&#39;.
+    APPEND wa_fieldcat TO gt_fieldcat.
+CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;APP_TIME&#39;.
+    wa_fieldcat-seltext_m = &#39;APP_TIME&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 30.
+    wa_fieldcat-col_pos = 11.
+     wa_fieldcat-just = &#39;C&#39;.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;ISS_DATE&#39;.
+    wa_fieldcat-seltext_m = &#39;ISS_DATE&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 30.
+    wa_fieldcat-col_pos = 12.
+      wa_fieldcat-just = &#39;C&#39;.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;ISS_TIME&#39;.
+    wa_fieldcat-seltext_m = &#39;ISS_TIME&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 20.
+    wa_fieldcat-col_pos = 13.
+      wa_fieldcat-just = &#39;C&#39;.
+    APPEND wa_fieldcat TO gt_fieldcat.
+CALL FUNCTION &#39;REUSE_ALV_GRID_DISPLAY&#39;
+      EXPORTING
+*       i_structure_name = &#39;fn_data&#39;
+        is_layout   = gs_layout
+        it_fieldcat = gt_fieldcat
+        i_save      = &#39;A&#39; &quot; Allow layout saving
+      TABLES
+        t_outtab    = fn_table.

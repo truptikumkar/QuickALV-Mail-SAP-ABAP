@@ -4,7 +4,7 @@
 ---
 
 ## 🔍 Project Description  
-**ALV-StockMail-Automation** is an SAP ABAP mini project that automates the generation of material stock status reports in ALV (ABAP List Viewer) format and delivers them via email to internal SAP users and external business stakeholders. The process can be scheduled to run periodically using background job scheduling (SM36), eliminating manual report generation and sharing.
+**QuickALV-Mail** is an SAP ABAP mini project that automates the generation of material stock status reports in ALV (ABAP List Viewer) format and delivers them via email to internal SAP users and external business stakeholders. The process can be scheduled to run periodically using background job scheduling (SM36), eliminating manual report generation and sharing.
 
 ---
 
@@ -55,13 +55,6 @@ If the `SEND_M` checkbox is selected, the system:
 
 ### Scheduling:  
 Can be scheduled via transaction `SM36` to execute periodically.
-
----
-
-## 👨‍💻 Author  
-**Kunal Deshpande**  
-SAP ABAP Developer Intern  
-📧 kunalgirish135@gmail.com  
 
 ---
 
